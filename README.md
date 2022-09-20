@@ -1,3 +1,3 @@
-# realtime-dashboard-poc
+# realtime-app-experimental
 
 ![Flow](Art/flow.png)
