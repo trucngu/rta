@@ -1,5 +1,5 @@
 export interface IOrder {
-    orderDate: Date
+    orderDateTime: Date
     orderNumber: string
     product: string
     customer: string

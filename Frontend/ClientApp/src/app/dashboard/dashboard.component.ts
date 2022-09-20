@@ -28,6 +28,7 @@ export class DashboardComponent implements OnInit {
       .build()
 
     this.connection.on("order_recieved_event", (payload) => {
+      console.log(payload)
       this.receivedOrders.push(payload)
       console.log(this.receivedOrders)
     })

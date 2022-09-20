@@ -2,6 +2,7 @@
 {
     public class OrderReceivedModel
     {
+        public DateTime OrderDateTime { get; set; }
         public string OrderNumber { get; set; }
         public string Product { get; set; }
         public decimal Price { get; set; }
