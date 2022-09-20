@@ -1,13 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core'
 import { HubConnectionBuilder } from '@microsoft/signalr'
-import { HubConnection } from '@microsoft/signalr/dist/esm/HubConnection';
-import { LogLevel } from '@microsoft/signalr/dist/esm/ILogger';
-import { HttpTransportType } from '@microsoft/signalr/dist/esm/ITransport';
-import { IOrder } from './IOrder';
+import { HubConnection } from '@microsoft/signalr/dist/esm/HubConnection'
+import { LogLevel } from '@microsoft/signalr/dist/esm/ILogger'
+import { HttpTransportType } from '@microsoft/signalr/dist/esm/ITransport'
+import * as _ from 'lodash'
+import { IOrder } from './IOrder'
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
+  styleUrls: [
+    "./dashboard.component.scss"
+  ]
 })
 export class DashboardComponent implements OnInit {
   connection?: HubConnection
@@ -21,16 +25,19 @@ export class DashboardComponent implements OnInit {
         transport: HttpTransportType.WebSockets,
         skipNegotiation: true
       })
-      .build();
+      .build()
 
     this.connection.on("order_recieved_event", (payload) => {
-      this.receivedOrders.push(payload);
+      this.receivedOrders.push(payload)
       console.log(this.receivedOrders)
-    });
+    })
 
     this.connection.on("order_status_changed_event", (payload) => {
-
-    });
+      const found = _.find(this.receivedOrders, order => order.orderNumber === payload.orderNumber)
+      if (found) {
+        found.status = payload.status
+      }
+    })
 
     this.connection.start()
       .then(() => {

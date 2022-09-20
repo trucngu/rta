@@ -25,9 +25,10 @@ builder.Services
     });
 builder.Services
     .Configure<ConsumerConfig>(builder.Configuration.GetSection("Kafka:Consumer"));
+
 builder.Services
-    .AddHostedService<OrderRecievedWorker>()
     .AddHostedService<OrderStatusChangedWorker>()
+    .AddHostedService<OrderRecievedWorker>()
     ;
 var app = builder.Build();
 
