@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using NotificationService.Models;
+using Serilog;
 using System.Text.Json;
 
 namespace NotificationService
@@ -35,6 +36,7 @@ namespace NotificationService
                 using (var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build())
                 {
                     consumer.Subscribe("order_recieved_event");
+                    logger.LogInformation("Listening on order_recieved_event");
 
                     while (!stoppingToken.IsCancellationRequested)
                     {

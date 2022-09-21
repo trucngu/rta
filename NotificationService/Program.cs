@@ -1,45 +1,79 @@
 using Confluent.Kafka;
 using NotificationService;
+using Serilog;
 using System.Text.Json;
 
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
-
-var cors = "cors_policy";
-builder.Services.AddCors(options =>
+public class Program
 {
-    options.AddPolicy(cors, p =>
+    public static int Main(string[] args)
     {
-        p.WithOrigins("http://localhost:4200")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
-builder.Services
-    .AddSignalR()
-    .AddJsonProtocol(c =>
-    {
-        c.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        c.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
-    });
-builder.Services
-    .Configure<ConsumerConfig>(builder.Configuration.GetSection("Kafka:Consumer"));
+        try
+        {
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.WithThreadId()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day,
+                    outputTemplate: "{Timestamp:HH:mm:ss.fff} | Thead {ThreadId} | {Message:lj}{NewLine}{Exception}")
+                .CreateLogger();
 
-builder.Services
-    .AddHostedService<OrderStatusChangedWorker>()
-    .AddHostedService<OrderRecievedWorker>()
-    ;
-var app = builder.Build();
+            var builder = WebApplication.CreateBuilder(args);
 
-app.UseCors(cors);
+            builder.Host.UseSerilog();
 
-app.MapHub<NotificationHub>("/hubs/notification");
+            builder.Services.AddControllers();
 
-app.UseHttpsRedirection();
+            var cors = "cors_policy";
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(cors, p =>
+                {
+                    p.WithOrigins("http://localhost:4200")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
 
-app.UseAuthorization();
+            builder.Services
+                .AddSignalR()
+                .AddJsonProtocol(c =>
+                {
+                    c.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    c.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
+                });
+            builder.Services
+                .Configure<ConsumerConfig>(builder.Configuration.GetSection("Kafka:Consumer"));
 
-app.MapControllers();
+            builder.Services
+                .AddHostedService<OrderStatusChangedWorker>()
+                .AddHostedService<OrderRecievedWorker>()
+                ;
+            var app = builder.Build();
 
-app.Run();
+            app.UseCors(cors);
+
+            app.MapHub<NotificationHub>("/hubs/notification");
+
+            app.UseHttpsRedirection();
+
+            app.UseAuthorization();
+
+            app.MapControllers();
+
+            app.Run();
+
+            return 0;
+
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Host terminated unexpectedly");
+            return 1;
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
+    }
+}

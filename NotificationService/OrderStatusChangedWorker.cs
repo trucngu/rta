@@ -36,6 +36,7 @@ namespace NotificationService
                 using (var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build())
                 {
                     consumer.Subscribe("order_status_changed_event");
+                    logger.LogInformation("Listening on order_status_changed_event");
 
                     while (!stoppingToken.IsCancellationRequested)
                     {
